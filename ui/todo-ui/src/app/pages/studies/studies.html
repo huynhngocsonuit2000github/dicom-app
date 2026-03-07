@@ -1,0 +1,50 @@
+<div class="container">
+
+    <h1 class="page-title">DICOM Studies</h1>
+
+    <!-- Upload Card -->
+    <div class="card upload-card">
+        <div class="form-row">
+            <input type="text" [(ngModel)]="patientName" placeholder="Enter patient name" class="input" />
+
+            <input type="file" multiple (change)="onFileChange($event)" class="file-input" />
+
+            <button (click)="upload()" class="btn primary">
+                Upload Study
+            </button>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card">
+        <table class="study-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Date</th>
+                    <th class="center">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr *ngFor="let s of studies$ | async ">
+                    <td>{{ s.id }}</td>
+                    <td>{{ s.patientName }}</td>
+                    <td>{{ s.studyDate | date:'mediumDate' }}</td>
+                    <td class="actions">
+                        <button (click)="view(s)" class="btn info">View</button>
+                        <button (click)="delete(s.id)" class="btn danger">Delete</button>
+                    </td>
+                </tr>
+
+                <tr *ngIf="(studies$ | async)?.length === 0">
+                    <td colspan="4" class="empty">
+                        No studies found
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>

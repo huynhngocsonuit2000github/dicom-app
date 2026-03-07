@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - orthanc
+      - ohif
+      
+  orthanc:
+    image: orthancteam/orthanc:latest
+    container_name: orthanc
+    ports:
+      - '8042:8042'
+      - '4242:4242'
+    environment:
+      - DICOM_WEB_PLUGIN_ENABLED=true
+    volumes:
+      - ./orthanc.json:/etc/orthanc/orthanc.json
+    restart: unless-stopped
+
+  ohif:
+    image: ohif/app:v3.11.0
+    ports:
+      - "3000:80"
+    volumes:
+      - ./app-config.js:/usr/share/nginx/html/app-config.js

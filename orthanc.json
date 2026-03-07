@@ -1,0 +1,21 @@
+{
+  "Name": "Orthanc",
+  "RemoteAccessAllowed": true,
+  "AuthenticationEnabled": false,
+
+  "Plugins": ["/usr/share/orthanc/plugins"],
+
+  "DicomWeb": {
+    "Enable": true,
+    "Root": "/dicom-web/",
+    "EnableWado": true,
+    "EnableQido": true,
+    "EnableStow": true
+  },
+
+  "HttpHeaders": {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "*"
+  }
+}

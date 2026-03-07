@@ -1,0 +1,22 @@
+<div class="todo-card">
+    <h2>📝 Todos</h2>
+
+    <div class="todo-input">
+        <input [(ngModel)]="title" placeholder="What needs to be done?" (keyup.enter)="create()" />
+        <button (click)="create()">Add</button>
+        <button (click)="test()">Test</button>
+    </div>
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+
+    <ul class="todo-list">
+        <li *ngFor="let t of todos$ | async; let i = index">
+            <div class="left">
+                <span class="order">{{ i + 1 }}</span>
+                <span [class.done]="t.isDone">{{ t.title }}</span>
+            </div>
+
+            <button class="btn-delete" (click)="delete(t.id)">X</button>
+        </li>
+    </ul>
+</div>

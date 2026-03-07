@@ -1,0 +1,87 @@
+.todo-card {
+  max-width: 520px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont;
+}
+
+h2 {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.todo-input {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+
+  button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #1976d2;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: #1565c0;
+    }
+  }
+}
+
+.todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .left {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-delete {
+    margin-left: auto;
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 6px;
+  }
+}
+
+.done {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.error {
+  color: #d32f2f;
+  margin-bottom: 8px;
+}
+
+.count {
+  margin-top: 12px;
+  text-align: right;
+  font-size: 13px;
+  color: #666;
+}
