@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
       
   orthanc-adapter:
-    image: orthanc-adapter:v2
+    image: orthanc-adapter-dryrun:v1
     container_name: orthanc-adapter
     ports:
       - "8080:80"
@@ -35,8 +35,24 @@ services:
     restart: unless-stopped
 
   ohif:
-    image: ohif-v3.11-custom:v2
+    image: ohif-v3.11-custom-dryrun:v1
     ports:
       - "3000:80"
     # volumes:
     #   - ./app-config.js:/usr/share/nginx/html/app-config.js 
+      
+  todo-api:
+    image: todo-api-dryrun:v1
+    container_name: todo-api
+    ports:
+      - "5005:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    restart: unless-stopped
+
+  todo-ui:
+    image: todo-ui-dryrun:v1 
+    container_name: todo-ui
+    ports:
+      - "4200:80"

@@ -1,0 +1,6 @@
+@dicom_adapter_HostAddress = http://localhost:5265
+
+GET {{dicom_adapter_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

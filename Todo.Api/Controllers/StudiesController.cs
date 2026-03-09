@@ -18,11 +18,13 @@ public class StudiesController : ControllerBase
     private static int _nextId = 0;
 
     private readonly ILogger<StudiesController> _logger;
+    private readonly IConfiguration _config;
     private readonly HttpClient _http = new();
 
-    public StudiesController(ILogger<StudiesController> logger)
+    public StudiesController(ILogger<StudiesController> logger, IConfiguration config)
     {
         _logger = logger;
+        _config = config;
     }
 
     public class CreateStudyRequest
@@ -61,6 +63,7 @@ public class StudiesController : ControllerBase
     [HttpGet]
     public IActionResult GetAll()
     {
+        System.Console.WriteLine("come to GetAll");
         var userStore = GetUserStore();
         return Ok(userStore.Values.OrderBy(x => x.Id));
     }
@@ -74,76 +77,71 @@ public class StudiesController : ControllerBase
         [FromForm] List<IFormFile> files,
         [FromForm] string patientName)
     {
+        System.Console.WriteLine("come to Create");
         if (files == null || !files.Any())
             return BadRequest("At least one DICOM file is required");
 
         var userStore = GetUserStore();
         var id = Interlocked.Increment(ref _nextId);
+        var byteArray = Encoding.ASCII.GetBytes("orthanc:orthanc");
+        _http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(
+                "Basic",
+                Convert.ToBase64String(byteArray));
 
-        try
+        string? orthancStudyId = null;
+
+        var baseUrl = _config["Orthanc:BaseUrl"];
+
+        // Upload all files
+        foreach (var file in files)
         {
-            var byteArray = Encoding.ASCII.GetBytes("orthanc:orthanc");
-            _http.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue(
-                    "Basic",
-                    Convert.ToBase64String(byteArray));
+            using var streamContent = new StreamContent(file.OpenReadStream());
+            streamContent.Headers.ContentType =
+                new MediaTypeHeaderValue("application/dicom");
 
-            string? orthancStudyId = null;
+            var uploadResponse = await _http.PostAsync(
+               $"{baseUrl}/instances",
+                streamContent);
 
-            // Upload all files
-            foreach (var file in files)
-            {
-                using var streamContent = new StreamContent(file.OpenReadStream());
-                streamContent.Headers.ContentType =
-                    new MediaTypeHeaderValue("application/dicom");
+            uploadResponse.EnsureSuccessStatusCode();
 
-                var uploadResponse = await _http.PostAsync(
-                    "http://localhost:8042/instances",
-                    streamContent);
+            var uploadJson = await uploadResponse.Content.ReadAsStringAsync();
+            using var uploadDoc = JsonDocument.Parse(uploadJson);
 
-                uploadResponse.EnsureSuccessStatusCode();
-
-                var uploadJson = await uploadResponse.Content.ReadAsStringAsync();
-                using var uploadDoc = JsonDocument.Parse(uploadJson);
-
-                // All files should belong to same Study
-                orthancStudyId ??= uploadDoc.RootElement
-                    .GetProperty("ParentStudy")
-                    .GetString();
-            }
-
-            // Get Study info once
-            var studyResponse = await _http.GetAsync(
-                $"http://localhost:8042/studies/{orthancStudyId}");
-
-            studyResponse.EnsureSuccessStatusCode();
-
-            var studyJson = await studyResponse.Content.ReadAsStringAsync();
-            using var studyDoc = JsonDocument.Parse(studyJson);
-
-            var studyInstanceUID = studyDoc.RootElement
-                .GetProperty("MainDicomTags")
-                .GetProperty("StudyInstanceUID")
+            // All files should belong to same Study
+            orthancStudyId ??= uploadDoc.RootElement
+                .GetProperty("ParentStudy")
                 .GetString();
-
-            var study = new Study
-            {
-                Id = id,
-                PatientName = patientName ?? "Unknown",
-                StudyDate = DateTime.UtcNow,
-                StudyInstanceUID = studyInstanceUID!,
-                OrthancStudyId = orthancStudyId!,
-                CreatedAt = DateTimeOffset.UtcNow
-            };
-
-            userStore[id] = study;
-
-            return Created($"/api/studies/{study.Id}", study);
         }
-        catch (Exception ex)
+
+        // Get Study info once
+        var studyResponse = await _http.GetAsync(
+            $"{baseUrl}/studies/{orthancStudyId}");
+
+        studyResponse.EnsureSuccessStatusCode();
+
+        var studyJson = await studyResponse.Content.ReadAsStringAsync();
+        using var studyDoc = JsonDocument.Parse(studyJson);
+
+        var studyInstanceUID = studyDoc.RootElement
+            .GetProperty("MainDicomTags")
+            .GetProperty("StudyInstanceUID")
+            .GetString();
+
+        var study = new Study
         {
-            return StatusCode(500, ex.Message);
-        }
+            Id = id,
+            PatientName = patientName ?? "Unknown",
+            StudyDate = DateTime.UtcNow,
+            StudyInstanceUID = studyInstanceUID!,
+            OrthancStudyId = orthancStudyId!,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        userStore[id] = study;
+
+        return Created($"/api/studies/{study.Id}", study);
     }
 
 
@@ -154,14 +152,16 @@ public class StudiesController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
+        System.Console.WriteLine("come to Delete");
         var userStore = GetUserStore();
 
         if (!userStore.TryRemove(id, out var study))
             return NotFound();
+        var baseUrl = _config["Orthanc:BaseUrl"];
 
         // Delete from Orthanc
         await _http.DeleteAsync(
-            $"http://localhost:8042/studies/{study.OrthancStudyId}");
+            $"{baseUrl}/studies/{study.OrthancStudyId}");
 
         return Ok(new { status = "Deleted", value = id });
     }
