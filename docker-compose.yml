@@ -1,16 +1,6 @@
 version: '3.8'
 
 services:
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - orthanc
-      - ohif
       
   orthanc:
     image: orthancteam/orthanc:latest
@@ -56,3 +46,14 @@ services:
     container_name: todo-ui
     ports:
       - "4200:80"
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - orthanc
+      - ohif

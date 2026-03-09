@@ -97,8 +97,18 @@ function modeFactory({ modeConfiguration }) {
 
       commandsManager.registerCommand('DEFAULT', 'callMyCustomApi', {
         commandFn: async () => {
+          const TOOL_NAME = 'My Custom Tool';
+
           try {
-            // Get StudyInstanceUID from URL
+            // Show loading notification
+            uiNotificationService.show({
+              title: TOOL_NAME,
+              message: 'Processing study...',
+              type: 'info',
+              duration: 2000,
+            });
+
+            // Get StudyInstanceUID
             const params = new URLSearchParams(window.location.search);
             const studyInstanceUID = params.get('StudyInstanceUIDs');
 
@@ -106,37 +116,49 @@ function modeFactory({ modeConfiguration }) {
               throw new Error('StudyInstanceUID not found in URL');
             }
 
-            // Call your adapter
-            const responses = await fetch(
-              `http://localhost/orthanc-adapter/api/studies`
-            );
-
-            console.log('Data studies', responses);
-
-
-            // Call your adapter
+            // Fetch study info
             const response = await fetch(
               `http://localhost/orthanc-adapter/api/studies/${studyInstanceUID}`
             );
 
             if (!response.ok) {
-              throw new Error(`HTTP ${response.status}`);
+              throw new Error(`API Error ${response.status}`);
             }
 
             const data = await response.json();
 
+            // Extract useful info
+            const studyDate = data?.MainDicomTags?.StudyDate || 'Unknown';
+            const description = data?.MainDicomTags?.StudyDescription || 'N/A';
+            const patient = data?.PatientMainDicomTags?.PatientName || 'Anonymous';
+            const seriesCount = data?.Series?.length || 0;
+
+            // Pretty message
+            const message = `
+Patient: ${patient}
+Study Date: ${studyDate}
+Description: ${description}
+Series Count: ${seriesCount}
+Status: Successfully loaded
+      `;
+
             uiNotificationService.show({
-              title: 'My Custom Tool',
-              message: `API Result: ${JSON.stringify(data)}`,
+              title: TOOL_NAME,
+              message,
               type: 'success',
-              duration: 5000,
+              duration: 7000,
             });
+
+            console.log('Study Data:', data);
+
           } catch (error) {
+            console.error(error);
+
             uiNotificationService.show({
-              title: 'My Custom Tool',
-              message: `API Error: ${error.message}`,
+              title: TOOL_NAME,
+              message: `❌ ${error.message}`,
               type: 'error',
-              duration: 5000,
+              duration: 6000,
             });
           }
         },
