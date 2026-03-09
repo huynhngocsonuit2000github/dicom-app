@@ -1,0 +1,5 @@
+DROP DATABASE IF EXISTS orthanc;
+CREATE DATABASE orthanc;
+
+GRANT ALL PRIVILEGES ON orthanc.* TO 'orthanc'@'%';
+FLUSH PRIVILEGES;

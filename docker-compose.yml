@@ -1,17 +1,34 @@
 version: '3.8'
 
 services:
-      
+  mysql:
+    image: mysql:8
+    container_name: orthanc-mysql
+    command: --log-bin-trust-function-creators=1
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: orthanc
+      MYSQL_USER: orthanc
+      MYSQL_PASSWORD: orthanc
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
   orthanc:
     image: orthancteam/orthanc:latest
     container_name: orthanc
+    depends_on:
+      - mysql
     ports:
-      - '8042:8042'
-      - '4242:4242'
+      - "8042:8042"
+      - "4242:4242"
     environment:
-      - DICOM_WEB_PLUGIN_ENABLED=true
+      DICOM_WEB_PLUGIN_ENABLED: "true"
     volumes:
       - ./orthanc.json:/etc/orthanc/orthanc.json
+      - ./dicom-storage:/var/lib/orthanc/db
     restart: unless-stopped
       
   orthanc-adapter:
@@ -57,3 +74,6 @@ services:
     depends_on:
       - orthanc
       - ohif
+
+volumes:
+  mysql_data:

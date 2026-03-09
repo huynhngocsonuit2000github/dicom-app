@@ -2,8 +2,17 @@
   "Name": "Orthanc",
   "RemoteAccessAllowed": true,
   "AuthenticationEnabled": false,
-
   "Plugins": ["/usr/share/orthanc/plugins"],
+
+  "MySQL": {
+    "EnableIndex": true,
+    "EnableStorage": false,
+    "Host": "mysql",
+    "Port": 3306,
+    "Database": "orthanc",
+    "Username": "orthanc",
+    "Password": "orthanc"
+  },
 
   "DicomWeb": {
     "Enable": true,
@@ -12,7 +21,6 @@
     "EnableQido": true,
     "EnableStow": true
   },
-
   "HttpHeaders": {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
