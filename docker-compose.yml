@@ -23,10 +23,20 @@ services:
     volumes:
       - ./orthanc.json:/etc/orthanc/orthanc.json
     restart: unless-stopped
+      
+  orthanc-adapter:
+    image: orthanc-adapter:v2
+    container_name: orthanc-adapter
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    restart: unless-stopped
 
   ohif:
-    image: ohif/app:v3.11.0
+    image: ohif-v3.11-custom:v2
     ports:
       - "3000:80"
-    volumes:
-      - ./app-config.js:/usr/share/nginx/html/app-config.js
+    # volumes:
+    #   - ./app-config.js:/usr/share/nginx/html/app-config.js 
