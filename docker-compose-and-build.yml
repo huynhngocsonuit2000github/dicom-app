@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+
+  orthanc:
+    image: orthancteam/orthanc:latest
+    container_name: orthanc
+    ports:
+      - "8042:8042"
+      - "4242:4242"
+    environment:
+      - DICOM_WEB_PLUGIN_ENABLED=true
+    volumes:
+      - ./orthanc.json:/etc/orthanc/orthanc.json
+    restart: unless-stopped
+
+  orthanc-adapter:
+    build:
+      context: ./api/dicom-adapter
+      dockerfile: Dockerfile
+    image: orthanc-adapter-dryrun:v1
+    container_name: orthanc-adapter
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    restart: unless-stopped
+    depends_on:
+      - orthanc
+
+  ohif:
+    build:
+      context: ./ui/ohif-viewer
+      dockerfile: Dockerfile
+    image: ohif-v3.11-custom-dryrun:v1
+    container_name: ohif
+    ports:
+      - "3000:80"
+    depends_on:
+      - orthanc
+
+  todo-api:
+    build:
+      context: ./api/Todo.Api
+      dockerfile: Dockerfile
+    image: todo-api-dryrun:v1
+    container_name: todo-api
+    ports:
+      - "5005:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    restart: unless-stopped
+
+  todo-ui:
+    build:
+      context: ./ui/todo-ui
+      dockerfile: Dockerfile
+    image: todo-ui-dryrun:v1
+    container_name: todo-ui
+    ports:
+      - "4200:80"
+    depends_on:
+      - todo-api
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - orthanc
+      - ohif
+      - todo-ui
